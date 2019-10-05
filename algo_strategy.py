@@ -195,13 +195,19 @@ class AlgoStrategy(gamelib.AlgoCore):
 
         # Place destructors that attack enemy units
         # destructor_locations = [[0, 13], [27, 13], [8, 11], [19, 11], [13, 11], [14, 11]]
-        destructor_locations = [[7, 10], [20, 10]]
-        filters_locations = [[0, 13], [27, 13],[7, 11], [20, 11]]
+        destructor_locations = [[7, 10]]
+        filters_locations = [[0, 13], [27, 13],[7, 11]]
+        encryptors_points = [[26, 12], [25, 11], [24, 10]]
         # attempt_spawn will try to spawn units if we have resources, and will check if a blocking unit is already there
         game_state.attempt_spawn(DESTRUCTOR, destructor_locations)
+        game_state.attempt_spawn(ENCRYPTOR, encryptors_points)
 
         # Place filters in front of destructors to soak up damage for them
         game_state.attempt_spawn(FILTER, filters_locations)
+        SCRAMBLER_loc = [[22, 8], [20, 6]] # protect
+        for loc in SCRAMBLER_loc:
+            game_state.attempt_spawn(SCRAMBLER, loc,1)
+        self.protect_left_corner(game_state) # check if have attacked 
 
     def build_reactive_defense(self, game_state):
         """
@@ -325,7 +331,7 @@ class AlgoStrategy(gamelib.AlgoCore):
             # check which layer to attack
             attack_start = [22, 8]
             mid_destructors_points_1 = [[12, 13], [17, 13], [21, 12]]
-            mid_encryptors_points_1 = [[10, 13], [11, 13], [13, 13], [14, 13], [15, 13], [16, 13], [18, 13], [19, 13], [20, 13], [22, 11]]# check if we can build at once
+            mid_encryptors_points_1 = [[10, 13], [11, 13], [13, 13], [14, 13], [15, 13], [16, 13], [18, 13], [19, 13], [20, 13], [22, 11],[23,10]]# check if we can build at once
         if row_number==15:
             # check which layer to attack
             attack_start = [21, 7]
@@ -358,6 +364,33 @@ class AlgoStrategy(gamelib.AlgoCore):
         game_state.attempt_spawn(PING, attack_loc, n)
 
 
+    def protect_left_corner(self,game_state):
+        yellow_destructors_points = [[3, 11], [4, 11]]
+        yellow_encryptors_points = [[3, 10], [4, 10], [4, 9]]
+        yellow_filters_points = [[1, 12], [3, 12], [4, 12]]
+        for loc in yellow_destructors_points:
+            self.if_do(0.7)
+            game_state.attempt_spawn(DESTRUCTOR, loc, 1)
+        for loc in yellow_filters_points:
+            self.if_do(0.7)
+            game_state.attempt_spawn(FILTER, loc, 1)
+        for loc in yellow_encryptors_points:
+            self.if_do(0.7)
+            game_state.attempt_spawn(ENCRYPTOR, loc, 1)
+
+    def protect_right_corner(self,game_state):
+        yellow_destructors_points = [[3, 11], [4, 11]]
+        yellow_encryptors_points = [[3, 10], [4, 10], [4, 9]]
+        yellow_filters_points = [[1, 12], [3, 12], [4, 12]]
+        for loc in yellow_destructors_points:
+            self.if_do(0.7)
+            game_state.attempt_spawn(DESTRUCTOR, loc, 1)
+        for loc in yellow_filters_points:
+            self.if_do(0.7)
+            game_state.attempt_spawn(FILTER, loc, 1)
+        for loc in yellow_encryptors_points:
+            self.if_do(0.7)
+            game_state.attempt_spawn(ENCRYPTOR, loc, 1)
 
 
 
