@@ -226,7 +226,7 @@ class AlgoStrategy(gamelib.AlgoCore):
         # destructor_locations = [[0, 13], [27, 13], [8, 11], [19, 11], [13, 11], [14, 11]]
         destructor_locations = [[7, 10]]
         filters_locations = [[0, 13], [27, 13],[7, 11]]
-        encryptors_points = [[26, 12], [25, 11], [24, 10]]
+        encryptors_points = [[1, 12], [26, 12], [2, 11], [25, 11], [3, 10], [24, 10]]
         # attempt_spawn will try to spawn units if we have resources, and will check if a blocking unit is already there
         game_state.attempt_spawn(DESTRUCTOR, destructor_locations)
         game_state.attempt_spawn(ENCRYPTOR, encryptors_points)
@@ -236,7 +236,12 @@ class AlgoStrategy(gamelib.AlgoCore):
         SCRAMBLER_loc = [[22, 8], [20, 6]] # protect
         for loc in SCRAMBLER_loc:
             game_state.attempt_spawn(SCRAMBLER, loc,1)
-        self.protect_left_corner(game_state) # check if have attacked 
+        if self._got_scored_on_corner(left=True):
+            self.protect_left_corner(game_state) # check if have attacked 
+
+        if self._got_scored_on_corner(left=False):
+            self.protect_right_corner(game_state) # check if have attacked 
+
 
     def build_reactive_defense(self, game_state):
         """
@@ -355,7 +360,7 @@ class AlgoStrategy(gamelib.AlgoCore):
         if count<3:
             return
         row_number,c = most_row_info
-        if row_number>16:
+        if row_number>16 and total_count<5:
             return
         if row_number==16:
             # check which layer to attack
@@ -367,7 +372,7 @@ class AlgoStrategy(gamelib.AlgoCore):
             attack_start = [21, 7]
             mid_destructors_points_1 = [[12, 12], [15, 12], [18, 12], [21, 11]]
             mid_encryptors_points_1 = [[10, 12], [11, 12], [13, 12], [14, 12], [16, 12], [17, 12], [19, 12], [20, 12], [21, 10], [22, 9]]
-        if row_number==14:
+        if row_number==14 or count==0:
             # check which layer to attack
             attack_start = [21, 7]
             mid_destructors_points_1 = [[12, 11], [16, 11], [20, 10]]
@@ -400,9 +405,9 @@ class AlgoStrategy(gamelib.AlgoCore):
 
 
     def protect_left_corner(self,game_state):
-        yellow_destructors_points = [[3, 11], [4, 11]]
-        yellow_encryptors_points = [[3, 10], [4, 10], [4, 9]]
-        yellow_filters_points = [[1, 12], [3, 12], [4, 12]]
+        yellow_destructors_points = [[2, 12], [3, 11], [4, 11]]
+        yellow_encryptors_points = [[4, 10]]
+        yellow_filters_points = [[2, 13], [3, 12], [4, 12]]
         for loc in yellow_destructors_points:
             self.if_do(0.7)
             game_state.attempt_spawn(DESTRUCTOR, loc, 1)
@@ -412,20 +417,17 @@ class AlgoStrategy(gamelib.AlgoCore):
         for loc in yellow_encryptors_points:
             self.if_do(0.7)
             game_state.attempt_spawn(ENCRYPTOR, loc, 1)
-
+        
     def protect_right_corner(self,game_state):
-        yellow_destructors_points = [[3, 11], [4, 11]]
-        yellow_encryptors_points = [[3, 10], [4, 10], [4, 9]]
-        yellow_filters_points = [[1, 12], [3, 12], [4, 12]]
-        for loc in yellow_destructors_points:
+        orange_destructors_points = [[24, 12], [25, 12], [24, 11]]
+        orange_filters_points = [[24, 13], [25, 13], [26, 13]]
+        for loc in orange_destructors_points:
             self.if_do(0.7)
             game_state.attempt_spawn(DESTRUCTOR, loc, 1)
-        for loc in yellow_filters_points:
+        for loc in orange_filters_points:
             self.if_do(0.7)
             game_state.attempt_spawn(FILTER, loc, 1)
-        for loc in yellow_encryptors_points:
-            self.if_do(0.7)
-            game_state.attempt_spawn(ENCRYPTOR, loc, 1)
+
 
     def _got_scored_on_corner(self, left=True):
         if left:
