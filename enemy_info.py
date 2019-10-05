@@ -48,7 +48,8 @@ class EnemyState:
 
     def detect_def_units(self, target_area=LEFT_CORNER, unit_type=None):
         """
-        Return a dictionary {unit_type: # stationary units in target area}.
+        Return a dictionary {unit_type: # stationary units in target area},
+        a count of total units, and a count of total positions.
         If unit type is specified, the dict contains only 1 entry.
         If not, then dict contains info for all defense unit types.
         """
@@ -64,6 +65,6 @@ class EnemyState:
             for loc in locs:
                 if loc in target_area:
                     rtn[type] += 1
-        return rtn
+        return rtn, sum(rtn.values()), len(target_area)
 
 

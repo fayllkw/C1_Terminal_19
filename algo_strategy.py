@@ -5,6 +5,8 @@ import warnings
 from sys import maxsize
 import json
 import enemy_info
+import copy
+from collections import defaultdict
 
 """
 Most of the algo code you write will be in this file unless you create new
@@ -40,6 +42,7 @@ class AlgoStrategy(gamelib.AlgoCore):
         EMP = config["unitInformation"][4]["shorthand"]
         SCRAMBLER = config["unitInformation"][5]["shorthand"]
         # This is a good place to do initial setup
+        self.prev_game_state = None
         self.scored_on_locations = []
 
 
@@ -55,8 +58,8 @@ class AlgoStrategy(gamelib.AlgoCore):
         gamelib.debug_write('Performing turn {} of your custom algo strategy'.format(game_state.turn_number))
         game_state.suppress_warnings(True)  #Comment or remove this line to enable warnings.
 
+        # self.prev_game_state = copy.deepcopy(game_state)
         self.detect_enemy_state(game_state)
-
         self.starter_strategy(game_state)
 
         game_state.submit_turn()
@@ -66,6 +69,17 @@ class AlgoStrategy(gamelib.AlgoCore):
     NOTE: All the methods after this point are part of the sample starter-algo
     strategy and can safely be replaced for your custom algo.
     """
+    # def most_damaged_defense(self, game_state):
+    #     def_locs = defaultdict(list)
+    #     self.total_units = 0
+    #     for location in self.game_state.game_map:
+    #         if location[1] < 14:  # still in our half
+    #             continue
+    #         for unit in self.game_state.game_map[location]:
+    #             if unit.player_index == 1 and unit.stationary:
+    #                 self.total_units += 1
+    #                 self.defence_locs[unit.unit_type].append(location)
+
 
     def detect_enemy_state(self, game_state):
         """
@@ -76,12 +90,12 @@ class AlgoStrategy(gamelib.AlgoCore):
         gamelib.debug_write("Detecting Enemy states!")
         enemy_state = enemy_info.EnemyState(game_state)
         enemy_state.scan_def_units()
-        in_left_corner = enemy_state.detect_def_units(enemy_info.LEFT_CORNER)
-        in_right_corner = enemy_state.detect_def_units(enemy_info.RIGHT_CORNER)
-        in_left_edge3 = enemy_state.detect_def_units(enemy_info.LEFT_EDGES[2])
-        in_left_edge4 = enemy_state.detect_def_units(enemy_info.LEFT_EDGES[3])
-        in_right_edge3 = enemy_state.detect_def_units(enemy_info.RIGHT_EDGES[2])
-        in_right_edge4 = enemy_state.detect_def_units(enemy_info.RIGHT_EDGES[3])
+        in_left_corner, total_units, totol_positions = enemy_state.detect_def_units(enemy_info.LEFT_CORNER)
+        in_right_corner, _, _ = enemy_state.detect_def_units(enemy_info.RIGHT_CORNER)
+        in_left_edge3, _, _ = enemy_state.detect_def_units(enemy_info.LEFT_EDGES[2])
+        in_left_edge4, _, _ = enemy_state.detect_def_units(enemy_info.LEFT_EDGES[3])
+        in_right_edge3, _, _= enemy_state.detect_def_units(enemy_info.RIGHT_EDGES[2])
+        in_right_edge4, _, _= enemy_state.detect_def_units(enemy_info.RIGHT_EDGES[3])
         gamelib.debug_write("left corner units:", in_left_corner)
         gamelib.debug_write("right corner units:", in_right_corner)
         gamelib.debug_write("3th left edge units:", in_left_edge3)
