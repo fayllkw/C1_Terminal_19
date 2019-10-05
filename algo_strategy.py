@@ -335,6 +335,9 @@ class AlgoStrategy(gamelib.AlgoCore):
                 # gamelib.debug_write("All locations: {}".format(self.scored_on_locations))
 
     def middle_attack(self,game_state):#Enemy points
+        mid_destructors_points_1 = []
+        mid_encryptors_points_1 = []
+        attack_start = []
         total_count, count, most_row_info = self.detect_frontier(self.enemy_state, DESTRUCTOR)
         if count<3:
             return
@@ -362,6 +365,8 @@ class AlgoStrategy(gamelib.AlgoCore):
         for loc in mid_encryptors_points_1:
             game_state.attempt_spawn(ENCRYPTOR, loc, 1)
         # place unit
+        if attack_start==[]:
+            return
         n = random.randint(1,5)
         game_state.attempt_spawn(EMP, attack_start, n) # at least 5
 
