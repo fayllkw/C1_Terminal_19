@@ -58,10 +58,10 @@ class AlgoStrategy(gamelib.AlgoCore):
         gamelib.debug_write('Performing turn {} of your custom algo strategy'.format(game_state.turn_number))
         game_state.suppress_warnings(True)  #Comment or remove this line to enable warnings.
 
-        # self.prev_game_state = copy.deepcopy(game_state)
         self.detect_enemy_state(game_state)
         self.starter_strategy(game_state)
 
+        self.prev_game_state = copy.deepcopy(game_state)
         game_state.submit_turn()
 
 
@@ -69,16 +69,16 @@ class AlgoStrategy(gamelib.AlgoCore):
     NOTE: All the methods after this point are part of the sample starter-algo
     strategy and can safely be replaced for your custom algo.
     """
-    # def most_damaged_defense(self, game_state):
-    #     def_locs = defaultdict(list)
-    #     self.total_units = 0
-    #     for location in self.game_state.game_map:
-    #         if location[1] < 14:  # still in our half
-    #             continue
-    #         for unit in self.game_state.game_map[location]:
-    #             if unit.player_index == 1 and unit.stationary:
-    #                 self.total_units += 1
-    #                 self.defence_locs[unit.unit_type].append(location)
+    def most_damaged_defense(self, game_state):
+        # get all
+        prev_def_units = defaultdict(list)
+        for location in self.prev_game_state.game_map:
+            if location[1] > 13:  # out of our half
+                continue
+            for unit in self.prev_game_state.game_map[location]:
+                if unit.player_index == 0 and unit.stationary:
+                    prev_def_units[unit.unit_type].append(unit)
+
 
 
     def detect_enemy_state(self, game_state):
