@@ -45,6 +45,8 @@ class EnemyState:
                     self.defence_locs[unit.unit_type].append(location)
                     # self.defence_units[unit.unit_type].append(unit)
         self.scanned = True
+        # gamelib.debug_write("Scan Result:")
+        # gamelib.debug_write("{}".format(self.defence_locs))
         # gamelib.debug_write("...Leaving scan_def_units...")
 
     def detect_def_units(self, target_area=LEFT_CORNER, unit_type=None):
@@ -56,8 +58,6 @@ class EnemyState:
         """
         if not self.scanned:
             self.scan_def_units()
-        gamelib.debug_write("Scan Result:")
-        gamelib.debug_write("{}".format(self.defence_locs))
         rtn = {}
         for type, locs in self.defence_locs.items():
             if unit_type != None and unit_type != type:
@@ -70,20 +70,26 @@ class EnemyState:
 
     def detect_frontier(self, unit_type):
         """
-        Return number of total units of given unit_type in frontier,
-        as well as the tuple (row number with most units, count for this row).
+        Return 1) number of total units,
+        2) number of total units of given unit_type in frontier,
+        3) a tuple (row number with most units, count for this row).
         """
         if not self.scanned:
             self.scan_def_units()
+        total_counts = 0
         count = 0
         row_counts = {i:0 for i in range(14, 19)}
-        for point in self.defence_locs[unit_type]:
-            if point in FRONTIER:
-                count += 1
-                row_counts[point[1]] += 1
+        for type, locs in self.defence_locs.items():
+            for point in locs:
+                if point in FRONTIER:
+                    total_counts += 1
+                    if type == unit_type:
+                        count += 1
+                        row_counts[point[1]] += 1
         ctn = Counter(row_counts)
         row_with_most_units = ctn.most_common(1)[0]
+        gamelib.debug_write("Total defense units in frontier: {}".format(total_counts))
         gamelib.debug_write("Total {} in frontier: {}".format(unit_type, count))
         gamelib.debug_write("Row {} has most {} ({})".format(row_with_most_units[0], unit_type, row_with_most_units[1]))
-        return count, row_with_most_units
+        return total_counts, count, row_with_most_units
 
