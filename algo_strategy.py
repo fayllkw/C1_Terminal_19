@@ -337,7 +337,7 @@ class AlgoStrategy(gamelib.AlgoCore):
             if not unit_owner_self:
                 gamelib.debug_write("Got scored on at: {}".format(location))
                 self.scored_on_locations.append(location)
-                gamelib.debug_write("All locations: {}".format(self.scored_on_locations))
+                # gamelib.debug_write("All locations: {}".format(self.scored_on_locations))
 
     def middle_attack(self,game_state):#Enemy points
         total_count, count, most_row_info = self.detect_frontier(self.enemy_state, DESTRUCTOR)
@@ -370,14 +370,22 @@ class AlgoStrategy(gamelib.AlgoCore):
         n = random.randint(1,5)
         game_state.attempt_spawn(EMP, attack_start, n) # at least 5
 
-
-
-
     def _calculate_cores(self, FF, EF, DF):
         filter_cost = self.config["unitInformation"][0]["cost"]
         encryptor_cost = self.config["unitInformation"][1]["cost"]
         destructor_cost = self.config["unitInformation"][2]["shorthand"]
         return FF * filter_cost + EF * encryptor_cost + DF * destructor_cost
+
+    def _got_scored_on_corner(self, left=True):
+        if left:
+            targets = [[0, 13], [1, 12], [2, 11], [3, 10], [4, 9]]
+        else:
+            targets = [[27, 13], [26, 12], [25, 11], [24, 10], [23, 9]]
+        for point in self.scored_on_locations:
+            if point in targets:
+                return True
+        return False
+
 
 if __name__ == "__main__":
     algo = AlgoStrategy()
