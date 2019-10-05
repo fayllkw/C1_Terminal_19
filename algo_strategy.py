@@ -60,12 +60,16 @@ class AlgoStrategy(gamelib.AlgoCore):
         gamelib.debug_write('Performing turn {} of your custom algo strategy'.format(game_state.turn_number))
         game_state.suppress_warnings(True)  #Comment or remove this line to enable warnings.
 
-        # self.prev_game_state = copy.deepcopy(game_state)
-        # self.detect_enemy_state(game_state)
-        self._enemy_channal(game_state) # check if they have channal
+
+        enemy_state = enemy_info.EnemyState(game_state)
+        enemy_state.scan_def_units()
+        count, most_row_info = self.detect_frontier(enemy_state, DESTRUCTOR)
+        self._enemy_channal(enemy_state) # check if they have channal
         gamelib.debug_write("@@@@ {0} {1}".format(self.has_enemy_left_channal,self.has_enemy_right_channal))
+
         self.starter_strategy(game_state)
 
+        self.prev_game_state = copy.deepcopy(game_state)
         game_state.submit_turn()
 
 
@@ -73,44 +77,58 @@ class AlgoStrategy(gamelib.AlgoCore):
     NOTE: All the methods after this point are part of the sample starter-algo
     strategy and can safely be replaced for your custom algo.
     """
-    # def most_damaged_defense(self, game_state):
-    #     def_locs = defaultdict(list)
-    #     self.total_units = 0
-    #     for location in self.game_state.game_map:
-    #         if location[1] < 14:  # still in our half
-    #             continue
-    #         for unit in self.game_state.game_map[location]:
-    #             if unit.player_index == 1 and unit.stationary:
-    #                 self.total_units += 1
-    #                 self.defence_locs[unit.unit_type].append(location)
+    def get_units_sorted_by_damage(self, game_state):
+        # get all defense units
+        prev_def_units = defaultdict(list)
+        for location in self.prev_game_state.game_map:
+            if location[1] > 13:  # out of our half
+                continue
+            for unit in self.prev_game_state.game_map[location]:
+                if unit.player_index == 0 and unit.stationary:
+                    prev_def_units[unit.unit_type].append(unit)
+        # compare to current defense units
+        current_locs = defaultdict(list)
+        damaged_health = defaultdict(list)
+        for unit_type, units in prev_def_units.items():
+            for unit in units:
+                location = [unit.x, unit.y]
+                prev_health = unit.stability
+                current_locs[unit_type].append(location)
+                if game_state.contains_stationary_unit(location):
+                    current_health = game_state.game_map[location].stability
+                    damaged_health[unit_type].append(prev_health - current_health)
+                else:
+                    damaged_health[unit_type].append(prev_health)
+        # sort the locations by the damaged health (large to small)
+        for unit_type, locs in current_locs.items():
+            locs[:] = [x for _,x in sorted(zip(damaged_health[unit_type], locs))]
+        return current_locs
 
+    def detect_frontier(self, enemy_state, unit_type):
+        return enemy_state.detect_frontier(unit_type)
 
-    def detect_enemy_state(self, game_state):
+    def detect_enemy_state(self, enemy_state):
         """
         This function gets info about the opponent state of this turn by using
         the EnemyState class from enemy_info.
         Currently only count certain defense units in specified area.
         """
         gamelib.debug_write("Detecting Enemy states!")
-        enemy_state = enemy_info.EnemyState(game_state)
-        enemy_state.scan_def_units()
         in_left_corner, total_units, totol_positions = enemy_state.detect_def_units(enemy_info.LEFT_CORNER)
         in_right_corner, _, _ = enemy_state.detect_def_units(enemy_info.RIGHT_CORNER)
         in_left_edge3, _, _ = enemy_state.detect_def_units(enemy_info.LEFT_EDGES[2])
         in_left_edge4, _, _ = enemy_state.detect_def_units(enemy_info.LEFT_EDGES[3])
         in_right_edge3, _, _= enemy_state.detect_def_units(enemy_info.RIGHT_EDGES[2])
         in_right_edge4, _, _= enemy_state.detect_def_units(enemy_info.RIGHT_EDGES[3])
-        gamelib.debug_write("left corner units:", in_left_corner)
-        gamelib.debug_write("right corner units:", in_right_corner)
-        gamelib.debug_write("3th left edge units:", in_left_edge3)
-        gamelib.debug_write("4th left edge units:", in_left_edge4)
-        gamelib.debug_write("3th right edge units:", in_right_edge3)
-        gamelib.debug_write("4th right edge units:", in_right_edge4)
+        # gamelib.debug_write("left corner units:", in_left_corner)
+        # gamelib.debug_write("right corner units:", in_right_corner)
+        # gamelib.debug_write("3th left edge units:", in_left_edge3)
+        # gamelib.debug_write("4th left edge units:", in_left_edge4)
+        # gamelib.debug_write("3th right edge units:", in_right_edge3)
+        # gamelib.debug_write("4th right edge units:", in_right_edge4)
 
-    def _enemy_channal(self,game_state):
+    def _enemy_channal(self,enemy_state):
         gamelib.debug_write("Detecting Enemy states!")
-        enemy_state = enemy_info.EnemyState(game_state)
-        enemy_state.scan_def_units()
         LEFT_EDGES_2, total_units, totol_positions = enemy_state.detect_def_units(enemy_info.LEFT_EDGES[2])
         if total_units>0.7*totol_positions:
             self.has_enemy_left_channal = True

@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import defaultdict, Counter
 import gamelib
 from util import vertical_mirror
 
@@ -20,6 +20,7 @@ LEFT_CORNER = [[4, 18], [3, 17], [4, 17], [2, 16], [3, 16], [4, 16], [1, 15],
 RIGHT_CORNER = [[23, 18], [23, 17], [24, 17], [23, 16], [24, 16], [25, 16],
                 [23, 15], [24, 15], [25, 15], [26, 15], [23, 14], [24, 14],
                 [25, 14], [26, 14], [27, 14]]  # side length = 5
+FRONTIER = [[i, j] for i in range(7, 21) for j in range(14, 19)]
 
 
 class EnemyState:
@@ -28,7 +29,7 @@ class EnemyState:
         # gamelib.debug_write("Create Enemy Ojbect!")
         self.game_state = game_state
         # self.defence_units = defaultdict(list)  # TODO: not sure if we need to store all the unit information
-        self.defence_locs = defaultdict(list)
+        self.defence_locs = defaultdict(list)  # key: type, value: list of locs
         self.scanned = False
 
     def scan_def_units(self):
@@ -67,4 +68,22 @@ class EnemyState:
                     rtn[type] += 1
         return rtn, sum(rtn.values()), len(target_area)
 
+    def detect_frontier(self, unit_type):
+        """
+        Return number of total units of given unit_type in frontier,
+        as well as the tuple (row number with most units, count for this row).
+        """
+        if not self.scanned:
+            self.scan_def_units()
+        count = 0
+        row_counts = {i:0 for i in range(14, 19)}
+        for point in self.defence_locs[unit_type]:
+            if point in FRONTIER:
+                count += 1
+                row_counts[point[1]] += 1
+        ctn = Counter(row_counts)
+        row_with_most_units = ctn.most_common(1)[0]
+        gamelib.debug_write("Total {} in frontier: {}".format(unit_type, count))
+        gamelib.debug_write("Row {} has most {} ({})".format(row_with_most_units[0], unit_type, row_with_most_units[1]))
+        return count, row_with_most_units
 
