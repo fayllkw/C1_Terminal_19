@@ -93,25 +93,38 @@ class AlgoStrategy(gamelib.AlgoCore):
             for unit in self.prev_game_state.game_map[location]:
                 if unit.player_index == 0 and unit.stationary:
                     prev_def_units[unit.unit_type].append(unit)
+
         # compare to current defense units
         current_locs = defaultdict(list)
         damaged_health = defaultdict(list)
         for unit_type, units in prev_def_units.items():
             for unit in units:
+                gamelib.debug_write("prev unit", unit)
                 location = [unit.x, unit.y]
                 prev_health = unit.stability
+                gamelib.debug_write("prev health", prev_health)
                 current_locs[unit_type].append(location)
                 if game_state.contains_stationary_unit(location):
-                    gamelib.debug_write(location)
-                    gamelib.debug_write(game_state.game_map[location])
-                    current_health = game_state.game_map[location].stability
+                    gamelib.debug_write("cur unit", game_state.game_map[location])
+                    if type(game_state.game_map[location]) is list:
+                        current_health = game_state.game_map[location][0].stability
+                    else:
+                        current_health = game_state.game_map[location].stability
                     damaged_health[unit_type].append(prev_health - current_health)
                 else:
                     damaged_health[unit_type].append(prev_health)
+
+        for unit_type, locs in current_locs.items():
+            gamelib.debug_write(unit_type)
+            gamelib.debug_write("locs", locs)
+            gamelib.debug_write("demaged", damaged_health[unit_type])
+
         # sort the locations by the damaged health (large to small)
         for unit_type, locs in current_locs.items():
             locs[:] = [x for _,x in sorted(zip(damaged_health[unit_type], locs))]
-        gamelib.debug_write(current_locs)
+
+
+
         return current_locs
 
     def detect_frontier(self, enemy_state, unit_type):

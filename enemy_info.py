@@ -45,6 +45,8 @@ class EnemyState:
                     self.defence_locs[unit.unit_type].append(location)
                     # self.defence_units[unit.unit_type].append(unit)
         self.scanned = True
+        # gamelib.debug_write("Scan Result:")
+        # gamelib.debug_write("{}".format(self.defence_locs))
         # gamelib.debug_write("...Leaving scan_def_units...")
 
     def detect_def_units(self, target_area=LEFT_CORNER, unit_type=None):
@@ -56,8 +58,6 @@ class EnemyState:
         """
         if not self.scanned:
             self.scan_def_units()
-        gamelib.debug_write("Scan Result:")
-        gamelib.debug_write("{}".format(self.defence_locs))
         rtn = {}
         for type, locs in self.defence_locs.items():
             if unit_type != None and unit_type != type:
