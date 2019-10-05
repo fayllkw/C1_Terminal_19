@@ -69,8 +69,8 @@ class AlgoStrategy(gamelib.AlgoCore):
     NOTE: All the methods after this point are part of the sample starter-algo
     strategy and can safely be replaced for your custom algo.
     """
-    def most_damaged_defense(self, game_state):
-        # get all
+    def get_units_sorted_by_damage(self, game_state):
+        # get all defense units
         prev_def_units = defaultdict(list)
         for location in self.prev_game_state.game_map:
             if location[1] > 13:  # out of our half
@@ -78,7 +78,23 @@ class AlgoStrategy(gamelib.AlgoCore):
             for unit in self.prev_game_state.game_map[location]:
                 if unit.player_index == 0 and unit.stationary:
                     prev_def_units[unit.unit_type].append(unit)
-
+        # compare to current defense units
+        current_locs = defaultdict(list)
+        damaged_health = defaultdict(list)
+        for unit_type, units in prev_def_units.items():
+            for unit in units:
+                location = [unit.x, unit.y]
+                prev_health = unit.stability
+                current_locs[unit_type].append(location)
+                if game_state.contains_stationary_unit(location):
+                    current_health = game_state.game_map[location].stability
+                    damaged_health[unit_type].append(prev_health - current_health)
+                else:
+                    damaged_health[unit_type].append(prev_health)
+        # sort the locations by the damaged health (large to small)
+        for unit_type, locs in current_locs.items():
+            locs[:] = [x for _,x in sorted(zip(damaged_health[unit_type], locs))]
+        return current_locs
 
 
     def detect_enemy_state(self, game_state):
