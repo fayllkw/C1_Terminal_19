@@ -58,7 +58,10 @@ class AlgoStrategy(gamelib.AlgoCore):
         gamelib.debug_write('Performing turn {} of your custom algo strategy'.format(game_state.turn_number))
         game_state.suppress_warnings(True)  #Comment or remove this line to enable warnings.
 
-        self.detect_enemy_state(game_state)
+        enemy_state = enemy_info.EnemyState(game_state)
+        enemy_state.scan_def_units()
+        count, most_row_info = self.detect_frontier(enemy_state, DESTRUCTOR)
+        self.detect_enemy_state(enemy_state)
         self.starter_strategy(game_state)
 
         self.prev_game_state = copy.deepcopy(game_state)
@@ -96,28 +99,28 @@ class AlgoStrategy(gamelib.AlgoCore):
             locs[:] = [x for _,x in sorted(zip(damaged_health[unit_type], locs))]
         return current_locs
 
+    def detect_frontier(self, enemy_state, unit_type):
+        return enemy_state.detect_frontier(unit_type)
 
-    def detect_enemy_state(self, game_state):
+    def detect_enemy_state(self, enemy_state):
         """
         This function gets info about the opponent state of this turn by using
         the EnemyState class from enemy_info.
         Currently only count certain defense units in specified area.
         """
         gamelib.debug_write("Detecting Enemy states!")
-        enemy_state = enemy_info.EnemyState(game_state)
-        enemy_state.scan_def_units()
         in_left_corner, total_units, totol_positions = enemy_state.detect_def_units(enemy_info.LEFT_CORNER)
         in_right_corner, _, _ = enemy_state.detect_def_units(enemy_info.RIGHT_CORNER)
         in_left_edge3, _, _ = enemy_state.detect_def_units(enemy_info.LEFT_EDGES[2])
         in_left_edge4, _, _ = enemy_state.detect_def_units(enemy_info.LEFT_EDGES[3])
         in_right_edge3, _, _= enemy_state.detect_def_units(enemy_info.RIGHT_EDGES[2])
         in_right_edge4, _, _= enemy_state.detect_def_units(enemy_info.RIGHT_EDGES[3])
-        gamelib.debug_write("left corner units:", in_left_corner)
-        gamelib.debug_write("right corner units:", in_right_corner)
-        gamelib.debug_write("3th left edge units:", in_left_edge3)
-        gamelib.debug_write("4th left edge units:", in_left_edge4)
-        gamelib.debug_write("3th right edge units:", in_right_edge3)
-        gamelib.debug_write("4th right edge units:", in_right_edge4)
+        # gamelib.debug_write("left corner units:", in_left_corner)
+        # gamelib.debug_write("right corner units:", in_right_corner)
+        # gamelib.debug_write("3th left edge units:", in_left_edge3)
+        # gamelib.debug_write("4th left edge units:", in_left_edge4)
+        # gamelib.debug_write("3th right edge units:", in_right_edge3)
+        # gamelib.debug_write("4th right edge units:", in_right_edge4)
 
     def starter_strategy(self, game_state):
         """
