@@ -203,8 +203,8 @@ class AlgoStrategy(gamelib.AlgoCore):
 
         # Place destructors that attack enemy units
         # destructor_locations = [[0, 13], [27, 13], [8, 11], [19, 11], [13, 11], [14, 11]]
-        destructor_locations = [[7, 10]]
-        filters_locations = [[0, 13], [27, 13],[7, 11]]
+        destructor_locations = [[7, 10]]+[[2, 12], [25, 12]]
+        filters_locations = [[0, 13], [27, 13],[7, 11]] + [[2, 13], [25, 13]]
         encryptors_points = [[1, 12], [26, 12], [2, 11], [25, 11], [3, 10], [24, 10]]
         # attempt_spawn will try to spawn units if we have resources, and will check if a blocking unit is already there
         game_state.attempt_spawn(DESTRUCTOR, destructor_locations)
