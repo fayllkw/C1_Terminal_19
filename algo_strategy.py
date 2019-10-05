@@ -61,6 +61,9 @@ class AlgoStrategy(gamelib.AlgoCore):
         game_state.suppress_warnings(True)  #Comment or remove this line to enable warnings.
 
 
+        if self.prev_game_state:
+            self.get_units_sorted_by_damage(game_state)
+
         enemy_state = enemy_info.EnemyState(game_state)
         enemy_state.scan_def_units()
         count, most_row_info = self.detect_frontier(enemy_state, DESTRUCTOR)
@@ -78,6 +81,10 @@ class AlgoStrategy(gamelib.AlgoCore):
     strategy and can safely be replaced for your custom algo.
     """
     def get_units_sorted_by_damage(self, game_state):
+        """
+        Return a dict {unit_type: list of locations}, where the list is sorted
+        from most deamaged location to least.
+        """
         # get all defense units
         prev_def_units = defaultdict(list)
         for location in self.prev_game_state.game_map:
@@ -95,6 +102,8 @@ class AlgoStrategy(gamelib.AlgoCore):
                 prev_health = unit.stability
                 current_locs[unit_type].append(location)
                 if game_state.contains_stationary_unit(location):
+                    gamelib.debug_write(location)
+                    gamelib.debug_write(game_state.game_map[location])
                     current_health = game_state.game_map[location].stability
                     damaged_health[unit_type].append(prev_health - current_health)
                 else:
@@ -102,9 +111,14 @@ class AlgoStrategy(gamelib.AlgoCore):
         # sort the locations by the damaged health (large to small)
         for unit_type, locs in current_locs.items():
             locs[:] = [x for _,x in sorted(zip(damaged_health[unit_type], locs))]
+        gamelib.debug_write(current_locs)
         return current_locs
 
     def detect_frontier(self, enemy_state, unit_type):
+        """
+        Return number of total units of given unit_type in frontier,
+        as well as the tuple (row number with most units, count for this row).
+        """
         return enemy_state.detect_frontier(unit_type)
 
     def detect_enemy_state(self, enemy_state):
@@ -306,6 +320,11 @@ class AlgoStrategy(gamelib.AlgoCore):
                 self.scored_on_locations.append(location)
                 gamelib.debug_write("All locations: {}".format(self.scored_on_locations))
 
+    def _calculate_cores(self, FF, EF, DF):
+        filter_cost = self.config["unitInformation"][0]["cost"]
+        encryptor_cost = self.config["unitInformation"][1]["cost"]
+        destructor_cost = self.config["unitInformation"][2]["shorthand"]
+        return FF * filter_cost + EF * encryptor_cost + DF * destructor_cost
 
 if __name__ == "__main__":
     algo = AlgoStrategy()
