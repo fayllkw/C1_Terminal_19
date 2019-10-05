@@ -46,6 +46,7 @@ class AlgoStrategy(gamelib.AlgoCore):
         self.scored_on_locations = []
         self.has_enemy_left_channal = False
         self.has_enemy_right_channal = False
+        self.enemy_state = None
 
 
     def on_turn(self, turn_state):
@@ -64,10 +65,12 @@ class AlgoStrategy(gamelib.AlgoCore):
         if self.prev_game_state:
             self.get_units_sorted_by_damage(game_state)
 
-        enemy_state = enemy_info.EnemyState(game_state)
-        enemy_state.scan_def_units()
-        count, most_row_info = self.detect_frontier(enemy_state, DESTRUCTOR)
-        self._enemy_channal(enemy_state) # check if they have channal
+        # update enemy_state first
+        self.enemy_state = enemy_info.EnemyState(game_state)
+        self.enemy_state.scan_def_units()
+        count, most_row_info = self.detect_frontier(self.enemy_state, DESTRUCTOR)
+        self._enemy_channal(self.enemy_state) # check if they have channal
+
         gamelib.debug_write("@@@@ {0} {1}".format(self.has_enemy_left_channal,self.has_enemy_right_channal))
 
         self.starter_strategy(game_state)
@@ -180,6 +183,8 @@ class AlgoStrategy(gamelib.AlgoCore):
         self.build_defences(game_state)
         # Now build reactive defenses based on where the enemy scored
         self.build_reactive_defense(game_state)
+        # use middle attack
+        self.middle_attack(game_state)
 
         # If the turn is less than 5, stall with Scramblers and wait to see enemy's base
         if game_state.turn_number < 5:
@@ -213,13 +218,14 @@ class AlgoStrategy(gamelib.AlgoCore):
         # More community tools available at: https://terminal.c1games.com/rules#Download
 
         # Place destructors that attack enemy units
-        destructor_locations = [[0, 13], [27, 13], [8, 11], [19, 11], [13, 11], [14, 11]]
+        # destructor_locations = [[0, 13], [27, 13], [8, 11], [19, 11], [13, 11], [14, 11]]
+        destructor_locations = [[7, 10], [20, 10]]
+        filters_locations = [[0, 13], [27, 13],[7, 11], [20, 11]]
         # attempt_spawn will try to spawn units if we have resources, and will check if a blocking unit is already there
         game_state.attempt_spawn(DESTRUCTOR, destructor_locations)
 
         # Place filters in front of destructors to soak up damage for them
-        filter_locations = [[8, 12], [19, 12]]
-        game_state.attempt_spawn(FILTER, filter_locations)
+        game_state.attempt_spawn(FILTER, filters_locations)
 
     def build_reactive_defense(self, game_state):
         """
@@ -332,6 +338,39 @@ class AlgoStrategy(gamelib.AlgoCore):
                 gamelib.debug_write("Got scored on at: {}".format(location))
                 self.scored_on_locations.append(location)
                 gamelib.debug_write("All locations: {}".format(self.scored_on_locations))
+    def middle_attack(self,game_state):#Enemy points
+        count, most_row_info = self.detect_frontier(self.enemy_state, DESTRUCTOR)
+        if count<3:
+            return
+        row_number,c = most_row_info
+        if row_number>16:
+            return
+        if row_number==16:
+            # check which layer to attack
+            attack_start = [22, 8]
+            mid_destructors_points_1 = [[12, 13], [17, 13], [21, 12]]
+            mid_encryptors_points_1 = [[10, 13], [11, 13], [13, 13], [14, 13], [15, 13], [16, 13], [18, 13], [19, 13], [20, 13], [22, 11]]# check if we can build at once
+        if row_number==15:
+            # check which layer to attack
+            attack_start = [21, 7]
+            mid_destructors_points_1 = [[12, 12], [15, 12], [18, 12], [21, 11]]
+            mid_encryptors_points_1 = [[10, 12], [11, 12], [13, 12], [14, 12], [16, 12], [17, 12], [19, 12], [20, 12], [21, 10], [22, 9]]
+        if row_number==14:
+            # check which layer to attack
+            attack_start = [21, 7]
+            mid_destructors_points_1 = [[12, 11], [16, 11], [20, 10]]
+            mid_encryptors_points_1 = [[10, 11], [11, 11], [13, 11], [14, 11], [15, 11], [17, 11], [18, 11], [19, 11], [21, 9], [22, 8]]
+        # check if resource enough
+        for loc in mid_destructors_points_1:
+            game_state.attempt_spawn(DESTRUCTOR, loc, 1)
+        for loc in mid_encryptors_points_1:
+            game_state.attempt_spawn(ENCRYPTOR, loc, 1)
+        # place unit
+        n = random.randint(1,5)
+        game_state.attempt_spawn(EMP, attack_start, n) # at least 5
+
+
+
 
     def _calculate_cores(self, FF, EF, DF):
         filter_cost = self.config["unitInformation"][0]["cost"]
