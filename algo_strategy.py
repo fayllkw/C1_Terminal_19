@@ -143,6 +143,9 @@ class AlgoStrategy(gamelib.AlgoCore):
         else:
             self.has_enemy_right_channal = False
 
+    def if_do(self,cut_off=0.5):
+        r = random.random()
+        return r<cut_off
     def starter_strategy(self, game_state):
         """
         For defense we will use a spread out layout and some Scramblers early on.
@@ -155,8 +158,10 @@ class AlgoStrategy(gamelib.AlgoCore):
         # Now build reactive defenses based on where the enemy scored
         self.build_reactive_defense(game_state)
         # use middle attack
-        self.middle_attack(game_state)
-
+        if self.if_do(0.7):
+            self.middle_attack(game_state)
+        if self.if_do(1):
+            self.edge_attack(game_state)
         # If the turn is less than 5, stall with Scramblers and wait to see enemy's base
         if game_state.turn_number < 5:
             self.stall_with_scramblers(game_state)
@@ -339,6 +344,18 @@ class AlgoStrategy(gamelib.AlgoCore):
         # place unit
         n = random.randint(1,5)
         game_state.attempt_spawn(EMP, attack_start, n) # at least 5
+
+
+    def edge_attack(self,game_state):
+        attack_loc = [5,8]
+        encryptors_points_1 = [[6, 10], [5, 9], [7, 8], [6, 7], [7, 7]]
+        destructors_points_1 = [[5, 10]]
+        for loc in destructors_points_1:
+            game_state.attempt_spawn(DESTRUCTOR, loc, 1)
+        for loc in encryptors_points_1:
+            game_state.attempt_spawn(ENCRYPTOR, loc, 1)
+        n = random.randint(5,20)
+        game_state.attempt_spawn(PING, attack_loc, n)
 
 
 
