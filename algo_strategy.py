@@ -189,13 +189,14 @@ class AlgoStrategy(gamelib.AlgoCore):
         # More community tools available at: https://terminal.c1games.com/rules#Download
 
         # Place destructors that attack enemy units
-        destructor_locations = [[0, 13], [27, 13], [8, 11], [19, 11], [13, 11], [14, 11]]
+        # destructor_locations = [[0, 13], [27, 13], [8, 11], [19, 11], [13, 11], [14, 11]]
+        destructor_locations = [[7, 10], [20, 10]]
+        filters_locations = [[0, 13], [27, 13],[7, 11], [20, 11]]
         # attempt_spawn will try to spawn units if we have resources, and will check if a blocking unit is already there
         game_state.attempt_spawn(DESTRUCTOR, destructor_locations)
 
         # Place filters in front of destructors to soak up damage for them
-        filter_locations = [[8, 12], [19, 12]]
-        game_state.attempt_spawn(FILTER, filter_locations)
+        game_state.attempt_spawn(FILTER, filters_locations)
 
     def build_reactive_defense(self, game_state):
         """
