@@ -12,12 +12,12 @@ from collections import defaultdict
 Most of the algo code you write will be in this file unless you create new
 modules yourself. Start by modifying the 'on_turn' function.
 
-Advanced strategy tips: 
+Advanced strategy tips:
 
   - You can analyze action frames by modifying on_action_frame function
 
-  - The GameState.map object can be manually manipulated to create hypothetical 
-  board states. Though, we recommended making a copy of the map to preserve 
+  - The GameState.map object can be manually manipulated to create hypothetical
+  board states. Though, we recommended making a copy of the map to preserve
   the actual current map state.
 """
 
@@ -44,6 +44,8 @@ class AlgoStrategy(gamelib.AlgoCore):
         # This is a good place to do initial setup
         self.prev_game_state = None
         self.scored_on_locations = []
+        self.has_enemy_left_channal = False
+        self.has_enemy_right_channal = False
 
 
     def on_turn(self, turn_state):
@@ -59,7 +61,9 @@ class AlgoStrategy(gamelib.AlgoCore):
         game_state.suppress_warnings(True)  #Comment or remove this line to enable warnings.
 
         # self.prev_game_state = copy.deepcopy(game_state)
-        self.detect_enemy_state(game_state)
+        # self.detect_enemy_state(game_state)
+        self._enemy_channal(game_state) # check if they have channal
+        gamelib.debug_write("@@@@ {0} {1}".format(self.has_enemy_left_channal,self.has_enemy_right_channal))
         self.starter_strategy(game_state)
 
         game_state.submit_turn()
@@ -102,6 +106,23 @@ class AlgoStrategy(gamelib.AlgoCore):
         gamelib.debug_write("4th left edge units:", in_left_edge4)
         gamelib.debug_write("3th right edge units:", in_right_edge3)
         gamelib.debug_write("4th right edge units:", in_right_edge4)
+
+    def _enemy_channal(self,game_state):
+        gamelib.debug_write("Detecting Enemy states!")
+        enemy_state = enemy_info.EnemyState(game_state)
+        enemy_state.scan_def_units()
+        LEFT_EDGES_2, total_units, totol_positions = enemy_state.detect_def_units(enemy_info.LEFT_EDGES[2])
+        if total_units>0.7*totol_positions:
+            self.has_enemy_left_channal = True
+        else:
+            self.has_enemy_left_channal = False
+
+
+        RIGHT_EDGES_2, total_units, totol_positions = enemy_state.detect_def_units(enemy_info.RIGHT_EDGES[2])
+        if total_units>0.7*totol_positions:
+            self.has_enemy_right_channal = True
+        else:
+            self.has_enemy_right_channal = False
 
     def starter_strategy(self, game_state):
         """
@@ -185,7 +206,7 @@ class AlgoStrategy(gamelib.AlgoCore):
 
             game_state.attempt_spawn(SCRAMBLER, deploy_location)
             """
-            We don't have to remove the location since multiple information 
+            We don't have to remove the location since multiple information
             units can occupy the same space.
             """
 
