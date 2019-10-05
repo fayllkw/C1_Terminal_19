@@ -62,9 +62,6 @@ class AlgoStrategy(gamelib.AlgoCore):
         game_state.suppress_warnings(True)  #Comment or remove this line to enable warnings.
 
 
-        if self.prev_game_state:
-            self.get_units_sorted_by_damage(game_state)
-
         # update enemy_state first
         self.enemy_state = enemy_info.EnemyState(game_state)
         self.enemy_state.scan_def_units()
@@ -82,52 +79,6 @@ class AlgoStrategy(gamelib.AlgoCore):
     NOTE: All the methods after this point are part of the sample starter-algo
     strategy and can safely be replaced for your custom algo.
     """
-    def get_units_sorted_by_damage(self, game_state):
-        """
-        Return a dict {unit_type: list of locations}, where the list is sorted
-        from most deamaged location to least.
-        """
-        # get all defense units
-        prev_def_units = defaultdict(list)
-        for location in self.prev_game_state.game_map:
-            if location[1] > 13:  # out of our half
-                continue
-            for unit in self.prev_game_state.game_map[location]:
-                if unit.player_index == 0 and unit.stationary:
-                    prev_def_units[unit.unit_type].append(unit)
-
-        # compare to current defense units
-        current_locs = defaultdict(list)
-        damaged_health = defaultdict(list)
-        for unit_type, units in prev_def_units.items():
-            for unit in units:
-                gamelib.debug_write("prev unit", unit)
-                location = [unit.x, unit.y]
-                prev_health = unit.stability
-                gamelib.debug_write("prev health", prev_health)
-                current_locs[unit_type].append(location)
-                if game_state.contains_stationary_unit(location):
-                    gamelib.debug_write("cur unit", game_state.game_map[location])
-                    if type(game_state.game_map[location]) is list:
-                        current_health = game_state.game_map[location][0].stability
-                    else:
-                        current_health = game_state.game_map[location].stability
-                    damaged_health[unit_type].append(prev_health - current_health)
-                else:
-                    damaged_health[unit_type].append(prev_health)
-
-        for unit_type, locs in current_locs.items():
-            gamelib.debug_write(unit_type)
-            gamelib.debug_write("locs", locs)
-            gamelib.debug_write("demaged", damaged_health[unit_type])
-
-        # sort the locations by the damaged health (large to small)
-        for unit_type, locs in current_locs.items():
-            locs[:] = [x for _,x in sorted(zip(damaged_health[unit_type], locs))]
-
-
-
-        return current_locs
 
     def detect_frontier(self, enemy_state, unit_type):
         """
@@ -236,7 +187,7 @@ class AlgoStrategy(gamelib.AlgoCore):
         SCRAMBLER_loc = [[22, 8], [20, 6]] # protect
         for loc in SCRAMBLER_loc:
             game_state.attempt_spawn(SCRAMBLER, loc,1)
-        self.protect_left_corner(game_state) # check if have attacked 
+        self.protect_left_corner(game_state) # check if have attacked
 
     def build_reactive_defense(self, game_state):
         """
