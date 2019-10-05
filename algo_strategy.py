@@ -61,11 +61,15 @@ class AlgoStrategy(gamelib.AlgoCore):
         gamelib.debug_write('Performing turn {} of your custom algo strategy'.format(game_state.turn_number))
         game_state.suppress_warnings(True)  #Comment or remove this line to enable warnings.
 
+
+        if self.prev_game_state:
+            self.get_units_sorted_by_damage(game_state)
+
         # update enemy_state first
         self.enemy_state = enemy_info.EnemyState(game_state)
         self.enemy_state.scan_def_units()
-        count, most_row_info = self.detect_frontier(self.enemy_state, DESTRUCTOR)
         self._enemy_channal(self.enemy_state) # check if they have channal
+
         gamelib.debug_write("@@@@ {0} {1}".format(self.has_enemy_left_channal,self.has_enemy_right_channal))
 
         self.starter_strategy(game_state)
@@ -79,6 +83,10 @@ class AlgoStrategy(gamelib.AlgoCore):
     strategy and can safely be replaced for your custom algo.
     """
     def get_units_sorted_by_damage(self, game_state):
+        """
+        Return a dict {unit_type: list of locations}, where the list is sorted
+        from most deamaged location to least.
+        """
         # get all defense units
         prev_def_units = defaultdict(list)
         for location in self.prev_game_state.game_map:
@@ -87,25 +95,46 @@ class AlgoStrategy(gamelib.AlgoCore):
             for unit in self.prev_game_state.game_map[location]:
                 if unit.player_index == 0 and unit.stationary:
                     prev_def_units[unit.unit_type].append(unit)
+
         # compare to current defense units
         current_locs = defaultdict(list)
         damaged_health = defaultdict(list)
         for unit_type, units in prev_def_units.items():
             for unit in units:
+                gamelib.debug_write("prev unit", unit)
                 location = [unit.x, unit.y]
                 prev_health = unit.stability
+                gamelib.debug_write("prev health", prev_health)
                 current_locs[unit_type].append(location)
                 if game_state.contains_stationary_unit(location):
-                    current_health = game_state.game_map[location].stability
+                    gamelib.debug_write("cur unit", game_state.game_map[location])
+                    if type(game_state.game_map[location]) is list:
+                        current_health = game_state.game_map[location][0].stability
+                    else:
+                        current_health = game_state.game_map[location].stability
                     damaged_health[unit_type].append(prev_health - current_health)
                 else:
                     damaged_health[unit_type].append(prev_health)
+
+        for unit_type, locs in current_locs.items():
+            gamelib.debug_write(unit_type)
+            gamelib.debug_write("locs", locs)
+            gamelib.debug_write("demaged", damaged_health[unit_type])
+
         # sort the locations by the damaged health (large to small)
         for unit_type, locs in current_locs.items():
             locs[:] = [x for _,x in sorted(zip(damaged_health[unit_type], locs))]
+
+
+
         return current_locs
 
     def detect_frontier(self, enemy_state, unit_type):
+        """
+        Return 1) number of total units,
+        2) number of total units of given unit_type in frontier,
+        3) a tuple (row number with most units, count for this row).
+        """
         return enemy_state.detect_frontier(unit_type)
 
     def detect_enemy_state(self, enemy_state):
@@ -319,11 +348,12 @@ class AlgoStrategy(gamelib.AlgoCore):
             if not unit_owner_self:
                 gamelib.debug_write("Got scored on at: {}".format(location))
                 self.scored_on_locations.append(location)
-                gamelib.debug_write("All locations: {}".format(self.scored_on_locations))
+                # gamelib.debug_write("All locations: {}".format(self.scored_on_locations))
+
     def middle_attack(self,game_state):#Enemy points
-        count, most_row_info = self.detect_frontier(self.enemy_state, DESTRUCTOR)
+        total_count, count, most_row_info = self.detect_frontier(self.enemy_state, DESTRUCTOR)
         if count<3:
-            return 
+            return
         row_number,c = most_row_info
         if row_number>16:
             return
@@ -351,6 +381,11 @@ class AlgoStrategy(gamelib.AlgoCore):
         n = random.randint(1,5)
         game_state.attempt_spawn(EMP, attack_start, n) # at least 5
 
+    def _calculate_cores(self, FF, EF, DF):
+        filter_cost = self.config["unitInformation"][0]["cost"]
+        encryptor_cost = self.config["unitInformation"][1]["cost"]
+        destructor_cost = self.config["unitInformation"][2]["shorthand"]
+        return FF * filter_cost + EF * encryptor_cost + DF * destructor_cost
 
     def edge_attack(self,game_state):
         attack_loc = [5,8]
@@ -391,6 +426,16 @@ class AlgoStrategy(gamelib.AlgoCore):
         for loc in yellow_encryptors_points:
             self.if_do(0.7)
             game_state.attempt_spawn(ENCRYPTOR, loc, 1)
+
+    def _got_scored_on_corner(self, left=True):
+        if left:
+            targets = [[0, 13], [1, 12], [2, 11], [3, 10], [4, 9]]
+        else:
+            targets = [[27, 13], [26, 12], [25, 11], [24, 10], [23, 9]]
+        for point in self.scored_on_locations:
+            if point in targets:
+                return True
+        return False
 
 
 
