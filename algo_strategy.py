@@ -173,10 +173,10 @@ class AlgoStrategy(gamelib.AlgoCore):
                 if self.if_do(0.7):
                     game_state.attempt_spawn(SCRAMBLER, loc,1)
         if self._got_scored_on_corner(left=True):
-            self.protect_left_corner(game_state) # check if have attacked 
+            self.protect_left_corner(game_state) # check if have attacked
 
         if self._got_scored_on_corner(left=False):
-            self.protect_right_corner(game_state) # check if have attacked 
+            self.protect_right_corner(game_state) # check if have attacked
 
 
     def build_reactive_defense(self, game_state):
@@ -411,7 +411,7 @@ class AlgoStrategy(gamelib.AlgoCore):
         for loc in purple_encryptors_points:
             game_state.attempt_spawn(ENCRYPTOR, loc, 1)
 
-        best_location = least_damage_spawn_location([attack_start_1,attack_start_2])
+        best_location = self.least_damage_spawn_location(game_state, [attack_start_1,attack_start_2])
         # if self.if_do(0.5):
         #     best_location = attack_start_1
         # else:
