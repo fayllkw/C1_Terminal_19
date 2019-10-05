@@ -68,7 +68,6 @@ class AlgoStrategy(gamelib.AlgoCore):
         # update enemy_state first
         self.enemy_state = enemy_info.EnemyState(game_state)
         self.enemy_state.scan_def_units()
-        count, most_row_info = self.detect_frontier(self.enemy_state, DESTRUCTOR)
         self._enemy_channal(self.enemy_state) # check if they have channal
 
         gamelib.debug_write("@@@@ {0} {1}".format(self.has_enemy_left_channal,self.has_enemy_right_channal))
@@ -132,8 +131,9 @@ class AlgoStrategy(gamelib.AlgoCore):
 
     def detect_frontier(self, enemy_state, unit_type):
         """
-        Return number of total units of given unit_type in frontier,
-        as well as the tuple (row number with most units, count for this row).
+        Return 1) number of total units,
+        2) number of total units of given unit_type in frontier,
+        3) a tuple (row number with most units, count for this row).
         """
         return enemy_state.detect_frontier(unit_type)
 
@@ -338,8 +338,9 @@ class AlgoStrategy(gamelib.AlgoCore):
                 gamelib.debug_write("Got scored on at: {}".format(location))
                 self.scored_on_locations.append(location)
                 gamelib.debug_write("All locations: {}".format(self.scored_on_locations))
+
     def middle_attack(self,game_state):#Enemy points
-        count, most_row_info = self.detect_frontier(self.enemy_state, DESTRUCTOR)
+        total_count, count, most_row_info = self.detect_frontier(self.enemy_state, DESTRUCTOR)
         if count<3:
             return
         row_number,c = most_row_info
