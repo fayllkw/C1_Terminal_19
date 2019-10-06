@@ -6,7 +6,6 @@ from sys import maxsize
 import json
 import enemy_info
 import copy
-from collections import defaultdict
 
 """
 Most of the algo code you write will be in this file unless you create new
@@ -88,26 +87,6 @@ class AlgoStrategy(gamelib.AlgoCore):
         3) a tuple (row number with most units, count for this row).
         """
         return enemy_state.detect_frontier(unit_type)
-
-    def detect_enemy_state(self, enemy_state):
-        """
-        This function gets info about the opponent state of this turn by using
-        the EnemyState class from enemy_info.
-        Currently only count certain defense units in specified area.
-        """
-        gamelib.debug_write("Detecting Enemy states!")
-        in_left_corner, total_units, totol_positions = enemy_state.detect_def_units(enemy_info.LEFT_CORNER)
-        in_right_corner, _, _ = enemy_state.detect_def_units(enemy_info.RIGHT_CORNER)
-        in_left_edge3, _, _ = enemy_state.detect_def_units(enemy_info.LEFT_EDGES[2])
-        in_left_edge4, _, _ = enemy_state.detect_def_units(enemy_info.LEFT_EDGES[3])
-        in_right_edge3, _, _= enemy_state.detect_def_units(enemy_info.RIGHT_EDGES[2])
-        in_right_edge4, _, _= enemy_state.detect_def_units(enemy_info.RIGHT_EDGES[3])
-        # gamelib.debug_write("left corner units:", in_left_corner)
-        # gamelib.debug_write("right corner units:", in_right_corner)
-        # gamelib.debug_write("3th left edge units:", in_left_edge3)
-        # gamelib.debug_write("4th left edge units:", in_left_edge4)
-        # gamelib.debug_write("3th right edge units:", in_right_edge3)
-        # gamelib.debug_write("4th right edge units:", in_right_edge4)
 
     def _enemy_channal(self,enemy_state):
         gamelib.debug_write("Detecting Enemy states!")
@@ -213,28 +192,6 @@ class AlgoStrategy(gamelib.AlgoCore):
             units can occupy the same space.
             """
 
-    def emp_line_strategy(self, game_state):
-        """
-        Build a line of the cheapest stationary unit so our EMP's can attack from long range.
-        """
-        # First let's figure out the cheapest unit
-        # We could just check the game rules, but this demonstrates how to use the GameUnit class
-        stationary_units = [FILTER, DESTRUCTOR, ENCRYPTOR]
-        cheapest_unit = FILTER
-        for unit in stationary_units:
-            unit_class = gamelib.GameUnit(unit, game_state.config)
-            if unit_class.cost < gamelib.GameUnit(cheapest_unit, game_state.config).cost:
-                cheapest_unit = unit
-
-        # Now let's build out a line of stationary units. This will prevent our EMPs from running into the enemy base.
-        # Instead they will stay at the perfect distance to attack the front two rows of the enemy base.
-        for x in range(27, 5, -1):
-            game_state.attempt_spawn(cheapest_unit, [x, 11])
-
-        # Now spawn EMPs next to the line
-        # By asking attempt_spawn to spawn 1000 units, it will essentially spawn as many as we have resources for
-        game_state.attempt_spawn(EMP, [24, 10], 1000)
-
     def least_damage_spawn_location(self, game_state, location_options):
         """
         This function will help us guess which location is the safest to spawn moving units from.
@@ -291,7 +248,7 @@ class AlgoStrategy(gamelib.AlgoCore):
                 self.scored_on_locations.append(location)
                 # gamelib.debug_write("All locations: {}".format(self.scored_on_locations))
 
-    def middle_attack(self,game_state):#Enemy points
+    def middle_attack(self,game_state):  #Enemy points
 
         mid_destructors_points_1 = []
         mid_encryptors_points_1 = []
